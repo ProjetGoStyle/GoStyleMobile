@@ -118,7 +118,7 @@ const App: () => React$Node = () => {
               }}
               style={{
                 flex: 1,
-                width: '50%',
+                width: '100%',
               }}
               onGoogleVisionBarcodesDetected={this.barcodeRecognized}
             />
