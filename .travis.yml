@@ -7,7 +7,7 @@ matrix:
       osx_image: xcode9.4
       env:
         - JOB_NAME=IOS
-      script: sudo .travis/ci.sh
+      script: sh .travis/ci.sh
 
     - os: linux
       language: android
@@ -26,4 +26,4 @@ matrix:
           - extra-google-google_play_services
       env:
         - JOB_NAME=ANDROID
-      script: sudo .travis/ci.sh
+      script: sh .travis/ci.sh
