@@ -1,4 +1,5 @@
 language: android
+sudo: required
 before_install:
   - nvm install 6
   - node --version
