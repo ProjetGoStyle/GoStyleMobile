@@ -15,4 +15,4 @@ android:
     - addon-google_apis-google-16
 script:
   - cd android
-  - sudo ./gradlew assembleRelease
+  - sh ./gradlew assembleRelease
