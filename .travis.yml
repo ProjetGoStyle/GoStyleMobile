@@ -4,6 +4,7 @@ before_install:
   - nvm install 6
   - node --version
 install:
+  - npm install npx
   - npm install
 android:
   components:
