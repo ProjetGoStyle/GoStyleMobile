@@ -1,60 +1,44 @@
-/**
- * Sample React Native App
- * https://github.com/facebook/react-native
- *
- * @format
- * @flow
- */
-
-import React, {Node} from 'react';
+import React, {Node, Component} from 'react';
 import {RNCamera} from 'react-native-camera';
-import {
-  SafeAreaView,
-  StyleSheet,
-  ScrollView,
-  View,
-  Text,
-  StatusBar,
-  ImageBackground,
-  Button,
-  Alert,
-} from 'react-native';
-import {createAppContainer} from 'react-navigation';
-import {createStackNavigator} from 'react-navigation-stack';
-
-import {
-  Header,
-  LearnMoreLinks,
-  Colors,
-  DebugInstructions,
-  ReloadInstructions,
-} from 'react-native/Libraries/NewAppScreen';
+import {View, Toast, Text, StyleSheet, PopupStub} from 'react-native';
+import {Colors} from 'react-native/Libraries/NewAppScreen';
+import {check, PERMISSIONS, RESULTS} from 'react-native-permissions';
 
 // ------------ NEW VIEW --------------
-
-const QRcodeScanner: () => React$Node = () => {
-  const barcodeRecognized = ({barcodes}) => {
+export default class QRcodeScanner extends Component {
+  barcodeRecognized = ({barcodes}) => {
     barcodes.forEach(barcode => console.warn(barcode.data));
   };
 
-  return (
-    <>
-      <View style={styles.body}>
-        <RNCamera
-          ref={ref => {
-            this.camera = ref;
-          }}
-          style={{
-            flex: 1,
-            width: '100%',
-          }}
-          onGoogleVisionBarcodesDetected={this.barcodeRecognized}>
-          <Text />
-        </RNCamera>
-      </View>
-    </>
-  );
-};
+  static render() {
+    check(PERMISSIONS.ANDROID.CAMERA)
+      .then(result => {
+        console.log('chargement');
+        switch (result) {
+          case RESULTS.UNAVAILABLE:
+          case RESULTS.DENIED:
+          case RESULTS.BLOCKED:
+            return <></>;
+          case RESULTS.GRANTED:
+            return (
+              <RNCamera
+                ref={ref => {
+                  this.camera = ref;
+                }}
+                style={{
+                  width: '50%',
+                }}
+                onGoogleVisionBarcodesDetected={this.barcodeRecognized}>
+                <Text />
+              </RNCamera>
+            );
+        }
+      })
+      .catch(error => {
+        // …
+      });
+  }
+}
 
 const styles = StyleSheet.create({
   scrollView: {
@@ -103,5 +87,3 @@ const styles = StyleSheet.create({
     borderBottomWidth: StyleSheet.hairlineWidth,
   },
 });
-
-export default QRcodeScanner;
