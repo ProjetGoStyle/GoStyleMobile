@@ -4,24 +4,15 @@ import {
   StyleSheet,
   View,
   Button,
-  StatusBar,
-  SafeAreaView,
   ScrollView,
   Text,
-  Alert,
   ImageBackground,
+  ActivityIndicator,
+  FlatList,
 } from 'react-native';
 import {ListItem} from 'react-native-elements';
-import {
-  Header,
-  LearnMoreLinks,
-  Colors,
-  DebugInstructions,
-  ReloadInstructions,
-} from 'react-native/Libraries/NewAppScreen';
+import {Colors} from 'react-native/Libraries/NewAppScreen';
 import {RNCamera} from 'react-native-camera';
-import QRcodeScanner from './QRcodeScanner';
-import {check, PERMISSIONS, RESULTS} from 'react-native-permissions';
 import Database from './Database';
 
 const HautPage = (): Node => (
@@ -33,6 +24,9 @@ const HautPage = (): Node => (
     <Text style={stylesHautPage.text}>GoStyle</Text>
   </ImageBackground>
 );
+// we get the database
+const db = new Database();
+var keyExtractor = (item, index) => index.toString();
 const stylesHautPage = StyleSheet.create({
   background: {
     paddingBottom: 10,
@@ -67,26 +61,56 @@ function Separator() {
 export default class App extends Component {
   constructor() {
     super();
+    this.state = {
+      isScanner: false,
+      isReduction: false,
+      isLoading: true,
+      reductions: [],
+      notFound: 'Pas de produits trouvé.\nScannez des QRcode pour en ajouter.',
+    };
+    db.listReduction().then(data => {
+      this.setState({
+        isScanner: this.state.isScanner, //toggles the visibilty of the text
+        isReduction: this.state.isReduction, //toggles the visibilty of the text
+        isLoading: true,
+        reductions: data,
+      });
+    });
   }
-  state = {
-    isScanner: false,
-    isReduction: false,
-    isPromotion: false,
-  };
-  listeItems: *[];
   barcodeRecognized = ({barcodes}) => {
     barcodes.forEach(barcode => {
-      if (typeof barcode.data === 'string') {
+      if (!barcode.data.includes('{')) {
         this.renderResults(1);
         // we create a new item for the list
-        if (typeof this.listeItems === 'undefined') {
-          this.listeItems = [];
-        }
-        this.listeItems[this.listeItems.length] += {
-          name: 'name',
-          link: barcode.data,
-          reduction: '10%',
-        };
+        db.reductionById(barcode.data).then(r => {
+          console.log('HOLD ' + r);
+          if (r !== null) {
+            console.log('HOLD UP');
+          } else {
+            // we add the barcode in the database
+            const reduction2add = {
+              id: barcode.data,
+              promotionId: 0,
+              dateUtilisation: new Date().toISOString(),
+            };
+            db.addReduction(reduction2add).then(result => {
+              this.setState({
+                isScanner: this.state.isScanner, //toggles the visibilty of the text
+                isReduction: this.state.isReduction, //toggles the visibilty of the text
+                isLoading: false,
+                reductions: this.state.reductions,
+              });
+              db.listReduction().then(data => {
+                this.setState({
+                  isScanner: this.state.isScanner, //toggles the visibilty of the text
+                  isReduction: this.state.isReduction, //toggles the visibilty of the text
+                  isLoading: true,
+                  reductions: data,
+                });
+              });
+            });
+          }
+        });
       }
     });
   };
@@ -105,17 +129,62 @@ export default class App extends Component {
       </RNCamera>
     );
   }
-  renderListReduction() {
+  renderReduction(reduc) {
     return (
-      <View>
-        {this.listeItems.map((l, i) => (
-          <ListItem key={i} title={l.name} subtitle={l.link} />
-        ))}
-      </View>
+      <ListItem
+        title={reduc.item.id}
+        subtitle={reduc.item.promotionId}
+        leftAvatar={{
+          source: reduc.item.prodImage && {uri: reduc.item.prodImage},
+          title: reduc.item.dateUtilisation,
+        }}
+        rightElement={
+          <Button
+            title={'X'}
+            style={styles.buttonDel}
+            source={require('./img/add.png')}
+            onPress={() => {
+              db.deleteReduction(reduc.item.id);
+              db.listReduction().then(data => {
+                this.setState({
+                  isScanner: this.state.isScanner, //toggles the visibilty of the text
+                  isReduction: this.state.isReduction, //toggles the visibilty of the text
+                  isLoading: true,
+                  reductions: data,
+                });
+              });
+            }}
+          />
+        }
+        bottomDivider
+      />
     );
   }
-  renderListPromo() {
-    return <View />;
+
+  renderListReduction() {
+    if (this.state.isLoading) {
+      return (
+        <View>
+          <ActivityIndicator size="large" color="#0000ff" />
+        </View>
+      );
+    }
+    if (this.state.reductions.length === 0) {
+      return (
+        <View>
+          <Text style={styles.message}>{this.state.notFound}</Text>
+        </View>
+      );
+    }
+    return (
+      <ScrollView style={styles.scrollview}>
+        <FlatList
+          keyExtractor={this.keyExtractor}
+          data={this.state.reductions}
+          renderItem={this.renderReduction}
+        />
+      </ScrollView>
+    );
   }
 
   renderResults = number => {
@@ -123,22 +192,33 @@ export default class App extends Component {
       case 1:
         this.setState({
           isScanner: !this.state.isScanner, //toggles the visibilty of the text
-          isReduction: this.state.isScanner, //toggles the visibilty of the text
-          isPromotion: this.state.isPromotion, //toggles the visibilty of the text
+          isReduction: this.state.isReduction, //toggles the visibilty of the text
+          isLoading: this.state.isLoading,
+          reductions: this.state.reductions,
         });
         break;
       case 2:
+        db.listReduction().then(data => {
+          this.setState({
+            isScanner: this.state.isScanner, //toggles the visibilty of the text
+            isReduction: this.state.isReduction, //toggles the visibilty of the text
+            isLoading: false,
+            reductions: data,
+          });
+        });
         this.setState({
           isScanner: this.state.isScanner, //toggles the visibilty of the text
           isReduction: !this.state.isReduction, //toggles the visibilty of the text
-          isPromotion: this.state.isPromotion, //toggles the visibilty of the text
+          isLoading: this.state.isLoading,
+          reductions: this.state.reductions,
         });
         break;
       case 3:
         this.setState({
           isScanner: this.state.isScanner, //toggles the visibilty of the text
           isReduction: this.state.isReduction, //toggles the visibilty of the text
-          isPromotion: !this.state.isPromotion, //toggles the visibilty of the text
+          isLoading: this.state.isLoading,
+          reductions: this.state.reductions,
         });
         break;
       default:
@@ -172,15 +252,7 @@ export default class App extends Component {
             />
           </View>
           <Separator />
-          <View>
-            <Button
-              title="Liste des promotions"
-              onPress={() => this.renderResults(3)}
-            />
-          </View>
-          <Separator />
           {this.state.isReduction ? this.renderListReduction() : null}
-          {this.state.isPromotion ? this.renderListPromo() : null}
         </View>
       </>
     );
@@ -228,10 +300,18 @@ const styles = StyleSheet.create({
     marginTop: 10,
     marginHorizontal: 16,
   },
+  buttonDel: {
+    width: 50,
+    height: 50,
+    backgroundColor: 'powderblue',
+  },
   separator: {
     marginVertical: 8,
     borderBottomColor: '#737373',
     borderBottomWidth: StyleSheet.hairlineWidth,
+  },
+  scrollview: {
+    height: 400,
   },
 });
 

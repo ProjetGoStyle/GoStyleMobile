@@ -25,7 +25,7 @@ export default class Database {
             .then(DB => {
               db = DB;
               console.log('Database OPEN');
-              db.executeSql('SELECT 1 FROM Product LIMIT 1')
+              db.executeSql('SELECT 1 FROM Reduction LIMIT 1')
                 .then(() => {
                   console.log('Database is ready ... executing query ...');
                 })
@@ -34,7 +34,7 @@ export default class Database {
                   console.log('Database not yet ready ... populating data');
                   db.transaction(tx => {
                     tx.executeSql(
-                      'CREATE TABLE IF NOT EXISTS Reduction (id, name, desc, reduction, price)',
+                      'CREATE TABLE IF NOT EXISTS Reduction (id, promotionId, dateUtilisation)',
                     );
                   })
                     .then(() => {
@@ -69,14 +69,14 @@ export default class Database {
       console.log('Database was not OPENED');
     }
   }
-  listProduct() {
+  listReduction() {
     return new Promise(resolve => {
-      const products = [];
+      const reductions = [];
       this.initDB()
         .then(db => {
           db.transaction(tx => {
             tx.executeSql(
-              'SELECT p.id, p.name, p.reduction, p.price FROM Reduction p',
+              'SELECT r.id, r.promotionId, r.dateUtilisation FROM Reduction r',
               [],
             ).then(([tx, results]) => {
               console.log('Query completed');
@@ -84,18 +84,17 @@ export default class Database {
               for (let i = 0; i < len; i++) {
                 let row = results.rows.item(i);
                 console.log(
-                  `Reduction ID: ${row.id}, Reduction Name: ${row.name}`,
+                  `Reduction ID: ${row.id}, Reduction Name: ${row.promotionId}`,
                 );
-                const {id, name, reduction, price} = row;
-                products.push({
+                const {id, promotionId, dateUtilisation} = row;
+                reductions.push({
                   id,
-                  name,
-                  reduction,
-                  price,
+                  promotionId,
+                  dateUtilisation,
                 });
               }
-              console.log(products);
-              resolve(products);
+              console.log(reductions);
+              resolve(reductions);
             });
           })
             .then(result => {
@@ -110,8 +109,7 @@ export default class Database {
         });
     });
   }
-  productById(id) {
-    console.log(id);
+  reductionById(id) {
     return new Promise(resolve => {
       this.initDB()
         .then(db => {
@@ -122,6 +120,8 @@ export default class Database {
                 if (results.rows.length > 0) {
                   let row = results.rows.item(0);
                   resolve(row);
+                } else {
+                  resolve(null);
                 }
               },
             );
@@ -138,16 +138,15 @@ export default class Database {
         });
     });
   }
-  addProduct(prod) {
+  addReduction(reduction) {
     return new Promise(resolve => {
       this.initDB()
         .then(db => {
           db.transaction(tx => {
-            tx.executeSql('INSERT INTO Reduction VALUES (?, ?, ?, ?)', [
-              prod.id,
-              prod.name,
-              prod.reduction,
-              prod.price,
+            tx.executeSql('INSERT INTO Reduction VALUES (?, ?, ?)', [
+              reduction.id,
+              reduction.promotionId,
+              reduction.dateUtilisation,
             ]).then(([tx, results]) => {
               resolve(results);
             });
@@ -164,14 +163,14 @@ export default class Database {
         });
     });
   }
-  updateProduct(id, prod) {
+  updateReduction(id, reduction) {
     return new Promise(resolve => {
       this.initDB()
         .then(db => {
           db.transaction(tx => {
             tx.executeSql(
-              'UPDATE Reduction SET name = ?, reduction = ?, price = ? WHERE id = ?',
-              [prod.name, prod.reduction, prod.price, id],
+              'UPDATE Reduction SET promotionId = ?, dateUtilisation = ? WHERE id = ?',
+              [reduction.promotionId, reduction.dateUtilisation, id],
             ).then(([tx, results]) => {
               resolve(results);
             });
@@ -188,7 +187,7 @@ export default class Database {
         });
     });
   }
-  deleteProduct(id) {
+  deleteReduction(id) {
     return new Promise(resolve => {
       this.initDB()
         .then(db => {
