@@ -12,9 +12,9 @@ Etapes d'initialisation du projet
 
 ### Librairies utilisées
 
-* [Laravel 5.8.15](https://laravel.com/) PHP web framework
-* [Laravel Voyager](https://laravelvoyager.com/) Admin panel for Laravel
-* [Webpack](https://webpack.js.org/) Dependency management
+* [react-native](https://reactnative.dev/) Framework permettant la mise en place d'applications mobiles
+* [react-native-camera](https://github.com/react-native-community/react-native-camera) Gestion d'un composent caméra
+* [react-native-sqlite-storage](https://github.com/andpor/react-native-sqlite-storage) Package de gestion de base de données SQLite
 
 ## Déploiement
 

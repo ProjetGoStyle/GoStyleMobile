@@ -6,7 +6,6 @@ const database_name = 'GoStyle.db';
 const database_version = '1.0';
 const database_displayname = 'SQLite React Offline Database';
 const database_size = 200000;
-// voir la source https://www.djamware.com/post/5caec76380aca754f7a9d1f1/react-native-tutorial-sqlite-offline-androidios-mobile-app
 export default class Database {
   initDB() {
     let db;

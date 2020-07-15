@@ -66,13 +66,12 @@ export default class App extends Component {
       isReduction: false,
       isLoading: true,
       reductions: [],
-      notFound: 'Pas de produits trouvé.\nScannez des QRcode pour en ajouter.',
     };
     db.listReduction().then(data => {
       this.setState({
-        isScanner: this.state.isScanner, //toggles the visibilty of the text
+        isScanner: this.state.isScanner, //toggles the visibilty of the camera
         isReduction: this.state.isReduction, //toggles the visibilty of the text
-        isLoading: true,
+        isLoading: false,
         reductions: data,
       });
     });
